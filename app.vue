@@ -15,7 +15,7 @@
       <a v-if="archivePath" :href="archivePath" download="Archive">Download archive</a>
       <table>
         <tr v-for="asset in assets">
-          <td><small>{{ asset.url }}</small></td>
+          <td><small>{{ asset.full }}</small></td>
           <td><small>{{ asset.status }}</small></td>
         </tr>
       </table>
@@ -39,18 +39,17 @@
 
       await Promise.allSettled(assets.value.map(async asset => {
         asset.status = "Downloading..."
-        const stats = await download(asset.url)
+        const stats = await download(asset.full)
         asset.status = "Done"
         asset.size = stats.size
         asset.done = true
-        html = html.replace(asset.match, `.${asset.pathname}`)
+        html = html.replace(asset.match, `.${encodeURI(asset.pathname)}`)
       }))
      
       const indexStats = await writeFile("index.html", html)
       localIndexPath.value = indexStats.path
 
       archivePath.value = await createArchive()
-      console.log(archivePath)
     }
     catch(e){
       console.error(e)
@@ -66,15 +65,18 @@
       match: element[2],
       url: new URL(element[2], origin)
     }))
-    .filter(asset => asset.url.origin == origin)
+    //.filter(asset => asset.url.origin == origin)
     .filter(asset => ['css', 'svg', 'png', 'jpeg', 'jpg', 'gif', 'ttf', 'woff2', 'js'].includes(asset.url.pathname.match(/(?:\.([^.]+))?$/)[1]))
-    .map(asset => ({
+    .map(asset => {
+      return({
       url: `${origin}${asset.url.pathname}`,
       pathname: asset.url.pathname,
       match: asset.match,
+      full: asset.url.href,
       status: "",
       size: ""
-    }))
+    })
+    })
   }
   const reset = async()=>{
     await $fetch("/api/reset")

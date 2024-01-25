@@ -7,10 +7,10 @@ export default defineEventHandler(async()=>{
         const targetFile = process.cwd() + "/public/archive.zip"
         const sourceDirectory = process.cwd() + "/static/archive"
         const output = fs.createWriteStream(targetFile)
+        output.on('close', ()=> resolve("/archive.zip"))
         const archive = archiver('zip')
         archive.pipe(output)
         archive.directory(sourceDirectory, false)
         archive.finalize()
-        output.on('close', ()=> resolve("/archive.zip"))
     })
 })
