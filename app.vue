@@ -1,10 +1,13 @@
 <template>
   <div>
     <title>WebArchiver</title>
-    <h1>WebArchiver</h1>
+    <h1>Web<span>Archiver</span></h1>
     <div>
-      <label for="url">Enter a url</label>
-      <input type="text" id="url" @keyup="onInput">
+      <form class="flex" @submit.prevent="submit">
+        <input type="text" id="url" ref="input" placeholder="Enter an URL">
+        <div v-if="assets.length"><a class="button" v-if="archivePath" :href="archivePath" download="Archive">Download archive</a></div>
+        <div v-else><button class="button">Archive !</button></div>
+      </form>
     </div>
     <div v-if="assets.length">
       <div v-if="assets.some(asset => !asset.done)">
@@ -12,7 +15,6 @@
         &nbsp;
         <em>{{ assets.filter(asset => asset.done).length }} / {{ assets.length }}</em>
       </div>
-      <a v-if="archivePath" :href="archivePath" download="Archive">Download archive</a>
       <table>
         <tr v-for="asset in assets">
           <td><small>{{ asset.full }}</small></td>
@@ -29,11 +31,11 @@
   const assets = ref([])
   const localIndexPath = ref(null)
   const archivePath = ref(null)
-  const onInput = async(e)=>{
-    if(e.key != "Enter") return;
+  const input = ref(null)
+  const submit = async(e)=>{
     try {
       await reset()
-      const url = e.target.value
+      const url = input.value.value
       let html = await getUrlAsText(url)
       assets.value = getAssets(url, html)
 
